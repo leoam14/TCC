@@ -20,7 +20,6 @@ import static com.googlecode.javacv.cpp.opencv_imgproc.CV_RGB2HSV;
 import static com.googlecode.javacv.cpp.opencv_imgproc.cvCvtColor;
 import static javaapplication3.BlobDemo.Highlight;
 import java.util.*;
-import jdk.nashorn.internal.runtime.regexp.joni.EncodingHelper;
 
 
 /**
