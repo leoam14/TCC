@@ -47,66 +47,67 @@ public class VisionControl {
         Highlight(srcImage, blobImage.minX, blobImage.minY, blobImage.maxX, blobImage.maxY, 2);
     }
     
-    public static List<BlobImage> getBlob(IplImage bin_copy,IplImage imgSaturated){
-        return  getBlob(bin_copy, imgSaturated, 0 , 1000000);
-    }
     
-    public static void setXYLabel (IplImage src, double[] xy){
+    
+    public static void setXYLabel (IplImage src, Double[] xy){
         CvFont font = new CvFont(CV_FONT_HERSHEY_SCRIPT_SIMPLEX, 0.4, 1);
         if(xy.length==2)
-        cvPutText(src, "x:" + xy[0] + " y:" + xy[1], cvPoint((int)xy[0], (int)xy[1]), font, new CvScalar(10));
+        cvPutText(src, "x:" + xy[0]+ " y:" + xy[1], cvPoint(xy[0].intValue(), xy[1].intValue()), font, new CvScalar(10));
     }
     
-    public static void setLabel (IplImage src, double x, double y, String text){
+    public static void setLabel (IplImage src, Double x, Double y, String text){
         CvFont font = new CvFont(CV_FONT_HERSHEY_SCRIPT_SIMPLEX, 0.8, 2);
-        cvPutText(src, text, cvPoint((int)x, (int)y), font, new CvScalar(10));
+        cvPutText(src, text, cvPoint(x.intValue(), y.intValue()), font, new CvScalar(10));
     }
     
-    public static void drawlineFromList(IplImage src, List<double[]> pointsIn){
+    public static void drawlineFromList(IplImage src, List<Double[]> pointsIn){
         
         for(int i=0; i+1< pointsIn.size(); i++){
-            double points[] = pointsIn.get(i);
-            double points2[] = pointsIn.get(i+1);
-            cvDrawLine(src, new CvPoint((int)points[0], (int)points[1]), new CvPoint((int)points2[0],(int) points2[1]), CvScalar.GREEN, 3, CV_AA, 0);
+            Double points[] = pointsIn.get(i);
+            Double points2[] = pointsIn.get(i+1);
+            cvDrawLine(src, new CvPoint(points[0].intValue(), points[1].intValue()), new CvPoint(points2[0].intValue(), points2[1].intValue()), CvScalar.GREEN, 3, CV_AA, 0);
         }
     }
     
-    public static void drawlineFromVector(IplImage src, double[] points){
+    public static void drawlineFromVector(IplImage src, Double[] points){
         
         for(int i=0; i+3< points.length; i+=2)
-        cvDrawLine(src, new CvPoint((int)points[i], (int)points[i+1]), new CvPoint((int)points[i+2],(int) points[i+3]), CvScalar.GREEN, 3, CV_AA, 0);
+        cvDrawLine(src, new CvPoint(points[i].intValue(), points[i+1].intValue()), new CvPoint(points[i+2].intValue(), points[i+3].intValue()), CvScalar.GREEN, 3, CV_AA, 0);
     }
     
-    public static List<double[]> getArrayOfCentros(List<BlobImage> bis){
-        List<double[]> centros = new ArrayList<double[]>();
+    public static List<Double[]> getArrayOfCentros(List<BlobImage> bis){
+        List<Double[]> centros = new ArrayList<Double[]>();
         for(BlobImage bi : bis){
         centros.add(bi.getCentro());
         }
         return centros;
     }
     
-    public static void drawAngle(IplImage src, List<double[]> pointsIn){
+    public static void drawAngle(IplImage src, List<Double[]> pointsIn){
         for(int i=0; i+2< pointsIn.size(); i++){
-            double points[] = pointsIn.get(i);
-            double points2[] = pointsIn.get(i+1);
-            double points3[] = pointsIn.get(i+2);
-            double retas[] =  GA.getEquacaoReta(points[0], points[1], points2[0], points2[1]);
-            double retas2[] =  GA.getEquacaoReta(points2[0], points2[1], points3[0], points3[1]);
-            double angulo = GA.getAnguloEntreRetasCoef(retas[0],retas[1],retas[2],retas2[0],retas2[1],retas2[2]);
+            Double points[] = pointsIn.get(i);
+            Double points2[] = pointsIn.get(i+1);
+            Double points3[] = pointsIn.get(i+2);
+            Double retas[] =  GA.getEquacaoReta(points[0], points[1], points2[0], points2[1]);
+            Double retas2[] =  GA.getEquacaoReta(points2[0], points2[1], points3[0], points3[1]);
+            Double angulo = GA.getAnguloEntreRetasCoef(retas[0],retas[1],retas[2],retas2[0],retas2[1],retas2[2]);
             setLabel(src,points2[0],points2[1], "#"+angulo+"#");
         }
     }
     
+    public static List<BlobImage> getBlob(IplImage bin_copy,IplImage imgSaturated){
+        return  getBlob(bin_copy, imgSaturated, 0.0 , 1000000.0);
+    }
     
-    public static List<BlobImage> getBlob(IplImage bin_copy,IplImage imgSaturated,double minArea,double maxArea){
+    public static List<BlobImage> getBlob(IplImage bin_copy,IplImage imgSaturated,Double minArea,Double maxArea){
         Blobs Regions = new Blobs();
                             Regions.BlobAnalysis(
                                     bin_copy, // image
                                     -1, -1, // ROI start col, row
                                     -1, -1, // ROI cols, rows
                                     1, // border (0 = black; 1 = white)
-                                    (int)minArea); // minarea
-                            Regions.PrintRegionData();
+                                    minArea.intValue()); // minarea
+                            //Regions.PrintRegionData();
 
                             int Xaux = 0, Yaux = 0;
                             int xinit = 0, yinit = 0;
@@ -114,6 +115,7 @@ public class VisionControl {
                             List<BlobImage> blobElementList = new ArrayList<BlobImage>();
                             for (int i=0; i<=Regions.MaxLabel ; i++){
                                 double[] Region = Regions.RegionData[i];
+                                
                                 int MinX = (int) Region[Blobs.BLOBMINX];
                                 int MaxX = (int) Region[Blobs.BLOBMAXX];
                                 int MinY = (int) Region[Blobs.BLOBMINY];

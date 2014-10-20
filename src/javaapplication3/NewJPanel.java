@@ -6,16 +6,29 @@ package javaapplication3;
 
 import com.googlecode.javacpp.Loader;
 import com.googlecode.javacv.Blobs;
+import static com.googlecode.javacv.cpp.opencv_core.*;
+import com.googlecode.javacv.cpp.opencv_core.CvMemStorage;
+import com.googlecode.javacv.cpp.opencv_core.CvScalar;
+import com.googlecode.javacv.cpp.opencv_core.CvSeq;
 import com.googlecode.javacv.cpp.opencv_core.IplImage;
 import static com.googlecode.javacv.cpp.opencv_highgui.*;
-import static com.googlecode.javacv.cpp.opencv_core.*;
+import com.googlecode.javacv.cpp.opencv_highgui.CvCapture;
 import static com.googlecode.javacv.cpp.opencv_imgproc.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import static javaapplication3.BlobDemo.Highlight;
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
-import java.util.*;
 
 /**
  *
@@ -75,9 +88,42 @@ public class NewJPanel extends javax.swing.JPanel {
                 .addGap(30, 30, 30))
         );
     }// </editor-fold>//GEN-END:initComponents
+    
+    public void GravarConfiguracaoArquivo(Configuracoes objeto){
+        try {
+                 FileOutputStream saveFile = new FileOutputStream("G:\\config.txt");
+                 ObjectOutputStream stream = new ObjectOutputStream(saveFile);
 
+                  // salva o objeto
+                 stream.writeObject(objeto);
+
+                 stream.close();
+            } catch (Exception exc) {
+                 exc.printStackTrace();
+            }
+    }
+    
+    public Configuracoes RestaurarConfiguracoesArquivo(){
+                Object objeto = null;
+                   
+                    try {
+                           FileInputStream restFile = new FileInputStream("G:\\config.txt");
+                           ObjectInputStream stream = new ObjectInputStream(restFile);
+ 
+                           // recupera o objeto
+                           objeto = stream.readObject();
+ 
+                           stream.close();
+                    } catch (Exception e) {
+                           e.printStackTrace();
+                           return null;
+                    }
+
+                    return (Configuracoes)objeto;
+    }
+    
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-
+        System.out.println(System.getProperty("user.dir"));
         Thread t;
 
         t = new Thread() {
@@ -98,9 +144,15 @@ public class NewJPanel extends javax.swing.JPanel {
                 //System.out.println(posX + " , " + posY);
             }
 
+            Boolean calcular = false;
+            Configuracoes configuracoes =null;
+            
             @Override
             public void run() {
 
+                //variaveis de controle
+                
+                
                 //Set The Panel Properties 
                 JPanel controler = new JPanel();
 
@@ -124,6 +176,7 @@ public class NewJPanel extends javax.swing.JPanel {
                 sliderMin.setSize(controler.getWidth(),30);
                 
                 
+                
                 controler.add(sliderMin);
                 controler.add(sliderMax);
                 JLabel labelArea = new JLabel("MIN-MAX AREA");
@@ -135,6 +188,8 @@ public class NewJPanel extends javax.swing.JPanel {
                 //Slider Colour 2
                 int minValCoulour2 = 0;
                 int maxValCoulour2 = 0;
+                int minAreaColour2 = 400;
+                int maxAreaColour2 = 100000;
                 JLabel labelColour2 = new JLabel();
                 labelColour2.setText("Cor do bloco:" + minValCoulour2 + "-" + maxValCoulour2);
                 labelColour2.setSize(controler.getWidth(),30);
@@ -145,7 +200,25 @@ public class NewJPanel extends javax.swing.JPanel {
                 sliderMinColour2.setSize(controler.getWidth(),30);
                 controler.add(sliderMinColour2);
                 controler.add(sliderMaxColour2);
+                JSlider sliderAreaMin2 = new JSlider(0, 20000);
+                JSlider sliderAreaMax2 = new JSlider(0, 20000);
+                JLabel minMaxAreaColour2 = new JLabel("MIN-MAX AREA: ");
+                controler.add(minMaxAreaColour2);
+                controler.add(sliderAreaMin2);
+                controler.add(sliderAreaMax2);
+                
+                //Botao calcular
+                JButton botaoCalcular = new JButton("Calcular");
+                botaoCalcular.addActionListener(
+                new ActionListener() {
 
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        calcular = !calcular;
+                    }
+                });
+                controler.add(botaoCalcular);
+                
                 //Time For Blobs
                 JLabel tempoLabel = new JLabel();
                 tempoLabel.setSize(controler.getWidth(),30);
@@ -154,7 +227,7 @@ public class NewJPanel extends javax.swing.JPanel {
                 //Frame
                 JFrame frame = new JFrame();
                 frame.add(controler);
-                frame.setSize(250, 250);
+                frame.setSize(250, 500);
                 frame.setVisible(true);
 
                 //Set camera device
@@ -170,10 +243,7 @@ public class NewJPanel extends javax.swing.JPanel {
 
                 //Define Memory Manager
                 CvMemStorage storage = CvMemStorage.create();
-
-                //Max Area to Blob
-                double areaM = 1000, areaC = 0;
-
+                
                 //Define Used Binary Images
                 IplImage bin = cvCreateImage(cvSize(640, 480), IPL_DEPTH_8U, 1);
                 IplImage bin_copy = cvCreateImage(cvSize(640, 480), IPL_DEPTH_8U, 1);
@@ -189,7 +259,38 @@ public class NewJPanel extends javax.swing.JPanel {
                 CvScalar min2;
                 CvScalar max2;
 
-                //Loop for each Frame
+                Double anguloAtual=0.0;
+                Double anguloInicial=-1.0;
+                String direcao = "direita";
+                
+                configuracoes = RestaurarConfiguracoesArquivo();
+                if(configuracoes!=null){
+                maxArea = configuracoes.maxArea;
+                maxAreaColour2 = configuracoes.maxAreaColour2;
+                maxVal = configuracoes.maxVal;
+                maxValCoulour2 = configuracoes.maxValCoulour2;
+                minArea = configuracoes.minArea;
+                minAreaColour2 = configuracoes.minAreaColour2;
+                minVal = configuracoes.minVal;
+                minValCoulour2 = configuracoes.minValCoulour2;
+                sliderMin.setValue(minVal);
+                sliderMax.setValue(maxVal);
+                sliderMinColour2.setValue(minValCoulour2);
+                sliderMaxColour2.setValue(maxValCoulour2);
+                sliderAreaMin.setValue(minArea);
+                sliderAreaMax.setValue(maxArea);
+                sliderAreaMin2.setValue(minAreaColour2);
+                sliderAreaMax2.setValue(maxAreaColour2);
+                }else
+                {
+                configuracoes = new Configuracoes();
+                }
+                
+                
+                
+                Robo robo = new Robo("COM3",9600);
+                
+                //Loop for each Frame                
                 for (;;) {
                     //Get Values From Slider
                     minVal = sliderMin.getValue();
@@ -200,7 +301,10 @@ public class NewJPanel extends javax.swing.JPanel {
                     label.setText("Cor do Plano:" + minVal + "-" + maxVal);
                     minArea = sliderAreaMin.getValue();
                     maxArea = sliderAreaMax.getValue();
+                    minAreaColour2 = sliderAreaMin2.getValue();
+                    maxAreaColour2 = sliderAreaMax2.getValue();
                     labelArea.setText("MIN-MAX AREA: "+ minArea+" : "+maxArea);
+                    minMaxAreaColour2.setText("MIN-MAX AREA: "+ minAreaColour2+" : "+maxAreaColour2);
                     
                     
 
@@ -211,6 +315,18 @@ public class NewJPanel extends javax.swing.JPanel {
                     //Generic Colour 2
                     min2 = VisionControl.getMinColourHSV(minValCoulour2);
                     max2 = VisionControl.getMaxColourHSV(maxValCoulour2);
+                    
+                    
+                    
+                    configuracoes.maxArea = maxArea;
+                    configuracoes.maxAreaColour2 = maxAreaColour2;
+                    configuracoes.maxVal = maxVal;
+                    configuracoes.maxValCoulour2 = maxValCoulour2;
+                    configuracoes.minArea = minArea;
+                    configuracoes.minAreaColour2 = minAreaColour2;
+                    configuracoes.minVal = minVal;
+                    configuracoes.minValCoulour2 = minValCoulour2;
+                            
 
                     //Get Image From camera
                     image = cvQueryFrame(camera);
@@ -222,7 +338,7 @@ public class NewJPanel extends javax.swing.JPanel {
 
                         contour1 = new CvSeq();
                         contour3 = new CvSeq();
-                        areaM = 1000;
+                        
 
                         cvInRangeS(imgSatured, min, max, bin);
                         cvInRangeS(imgSatured, min2, max2, bin2);
@@ -247,11 +363,11 @@ public class NewJPanel extends javax.swing.JPanel {
                         long startTime = System.currentTimeMillis();    
                         
                             //Blob that identify Colour 1
-                            List<BlobImage> listBlob1 = VisionControl.getBlob(bin_copy, imgSatured,minArea,maxArea);
-                            //List<BlobImage> listBlob2 = VisionControl.getBlob(bin2_copy, imgSatured);
+                            List<BlobImage> listBlob1 = VisionControl.getBlob(bin_copy, imgSatured,new Double(minArea),new Double(maxArea));
+                            List<BlobImage> listBlob2 = VisionControl.getBlob(bin2_copy, imgSatured,new Double(minAreaColour2),new Double(maxAreaColour2));
                             
                             System.out.println("List1: "+ listBlob1.size());
-                            //System.out.println("List2: "+ listBlob2.size());
+                            System.out.println("List2: "+ listBlob2.size());
                             
                             
                             for (BlobImage bi : listBlob1){
@@ -259,20 +375,79 @@ public class NewJPanel extends javax.swing.JPanel {
                                 VisionControl.setXYLabel(imgSatured, bi.getCentro());
                             }
                             
-                            VisionControl.drawlineFromList(imgSatured, VisionControl.getArrayOfCentros(listBlob1));
-                            VisionControl.drawAngle(imgSatured, VisionControl.getArrayOfCentros(listBlob1));  //Rolou Nao
-                         
+                            for (BlobImage bi : listBlob2){
+                                VisionControl.HighlightElement(imgSatured,bi);
+                                VisionControl.setXYLabel(imgSatured, bi.getCentro());
+                            }
+                            
+                            List<Double[]> listaCentros = VisionControl.getArrayOfCentros(listBlob1);
+                            
+                            if(VisionControl.getArrayOfCentros(listBlob2).size()>=1)
+                            listaCentros.add(VisionControl.getArrayOfCentros(listBlob2).get(0));
+                            
+                            VisionControl.drawlineFromList(imgSatured,listaCentros);
+                            VisionControl.drawAngle(imgSatured, listaCentros);
+                            
+                            if(GA.getAngleFromPoints(listaCentros).size()>=1)
+                            anguloAtual = GA.getAngleFromPoints(listaCentros).get(0);
+                            
+                            if(robo!=null)
+                            {
+                                if(calcular == true){
+                                    if(anguloInicial==-1.0)
+                                        anguloInicial = anguloAtual;
+
+                                    if(anguloAtual < 5){
+                                        System.out.println("Fica Paradinha!!!");
+                                        direcao = "";
+                                        robo.escreveSerial("o0o");
+                                        anguloInicial = -1.0;
+                                        anguloAtual = 0.0;
+                                    }else
+                                    if(anguloAtual > anguloInicial+5)
+                                    {
+                                        direcao = "Esquerda";
+                                    }
+                                    else
+                                    {
+
+                                        System.out.println("Mover para "+ direcao);
+                                        if(direcao.equalsIgnoreCase("Direita"))
+                                        robo.escreveSerial("o80o");
+                                        if(direcao.equalsIgnoreCase("Esquerda"))
+                                        robo.escreveSerial("o-80o");   
+
+                                        try {
+                                            sleep(200);
+                                            robo.escreveSerial("o0o");
+                                        } catch (InterruptedException ex) {
+                                            robo.escreveSerial("o0o");
+                                        }
+                                    }
+                                }else
+                                {
+                                    direcao = "Direita";
+                                    robo.escreveSerial("o0o");
+                                    anguloInicial = -1.0;
+                                    anguloAtual = 0.0;
+                                }
+                            }else{
+                            anguloAtual = 0.0;
+                            }
+                            
+                            
                         long stopTime = System.currentTimeMillis();
                         
-                        tempoLabel.setText("Tempo Blobs :"+(stopTime - startTime));
+                        tempoLabel.setText("Tempo Blobs :"+(stopTime - startTime)+" Ang: "+anguloInicial+" | "+anguloAtual);
 
                         cvShowImage("Imagem Saturada", imgSatured);
                         cvShowImage("Colour 1", bin_copy);
                         cvShowImage("Colour 2", bin2_copy);
-                        cvShowImage("Imagem Natural", image);
+                        //cvShowImage("Imagem Natural", image);
 
                         char c = (char) cvWaitKey(30);
                         if (c == 27) {
+                            GravarConfiguracaoArquivo(configuracoes);
                             break;
                         }
                     }
@@ -334,7 +509,7 @@ public class NewJPanel extends javax.swing.JPanel {
 //cvDrawContours(       bin, contour2, CV_RGB(255, 0,   0), CV_RGB(0, 0, 0), 0, 2, 8,cvPoint(0, 0));
 //                        while (contour3 != null && !contour3.isNull()) {
 //
-//                            double area = cvContourArea(contour3, CV_WHOLE_SEQ, 0); //slice CV_WHOLE_SEQ is the Whole all the slices
+//                            Double area = cvContourArea(contour3, CV_WHOLE_SEQ, 0); //slice CV_WHOLE_SEQ is the Whole all the slices
 //                            if (area < 3000) {
 //                                cvDrawContours(imgSatured, contour3, CV_RGB(0, 0, 255), CV_RGB(0, 0, 0), 0, 2, 8, cvPoint(0, 0));
 //                                //System.out.println("Area Blue: "+area);
@@ -344,7 +519,7 @@ public class NewJPanel extends javax.swing.JPanel {
 //
 //                        while (contour1 != null && !contour1.isNull()) {
 //
-//                            double area = cvContourArea(contour1, CV_WHOLE_SEQ, 0); //slice CV_WHOLE_SEQ is the Whole all the slices
+//                            Double area = cvContourArea(contour1, CV_WHOLE_SEQ, 0); //slice CV_WHOLE_SEQ is the Whole all the slices
 //                            if (area < 5000) {
 //                                cvDrawContours(imgSatured, contour1, CV_RGB(255, 255, 0), CV_RGB(0, 0, 0), 0, 2, 8, cvPoint(0, 0));
 //                            }
@@ -358,9 +533,9 @@ public class NewJPanel extends javax.swing.JPanel {
 //                    int posX=0,posY=0;
 //                    CvMoments moments = new CvMoments();
 //                    cvMoments(bin, moments, 1);
-//                    double mom10 = cvGetSpatialMoment(moments, 1, 0);
-//                    double mom01 = cvGetSpatialMoment(moments, 0, 1);
-//                    double area = cvGetCentralMoment(moments, 0, 0);
+//                    Double mom10 = cvGetSpatialMoment(moments, 1, 0);
+//                    Double mom01 = cvGetSpatialMoment(moments, 0, 1);
+//                    Double area = cvGetCentralMoment(moments, 0, 0);
 //                    posX = (int) (mom10 / area);
 //                    posY = (int) (mom01 / area);
 //                    // only if its a valid position

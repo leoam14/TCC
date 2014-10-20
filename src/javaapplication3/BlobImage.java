@@ -53,10 +53,10 @@ public class BlobImage {
         this.perimeter = perimeter;
     }
     
-    public double[] getCentro(){
-        double xy[] = new double[2];
-        xy[0] = minX+((maxX-minX)/2);
-        xy[1] = minY+((maxY-minY)/2);
+    public Double[] getCentro(){
+        Double xy[] = new Double[2];
+        xy[0] = minX+((maxX-minX)/2.0);
+        xy[1] = minY+((maxY-minY)/2.0);
         return xy;
     }
 

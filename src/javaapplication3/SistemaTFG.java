@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-package sistematfg;
+package javaapplication3;
 
 import java.util.Scanner;
 
@@ -19,16 +19,18 @@ public class SistemaTFG {
     public static void main(String[] args) {
         Scanner entrada = new Scanner(System.in);
         
-        Robo robo = new Robo("COM5",9600);
-        CalcularInversa2D c = new CalcularInversa2D();
-        c.anguloAjuste(8.00, 1.50, -Math.toRadians(90));// angulo máxima do punho é 60 graus
+        Robo robo = new Robo("COM3",9600);
+        //CalcularInversa2D c = new CalcularInversa2D();
+        //c.anguloAjuste(8.00, 1.50, -Math.toRadians(90));// angulo máxima do punho é 60 graus
         
         //robo.escreveSerial("b45b");
-        robo.escreveSerial("b"+c.getAng1().intValue()+"b");
-        robo.escreveSerial("a"+c.getAng2ajustado().intValue()+"a");
-        robo.escreveSerial("p"+c.getAng3ajustado().intValue()+"p");
+        //robo.escreveSerial("b"+c.getAng1().intValue()+"b");
+        //robo.escreveSerial("a"+c.getAng2ajustado().intValue()+"a");
+        //robo.escreveSerial("p"+c.getAng3ajustado().intValue()+"p");
         //System.out.println("ang 1= "+c.getAng1()+"\nang 2= "+c.getAng2ajustado()+"\nang 3= "+c.getAng3ajustado());
-        
+        while(true){
+        robo.escreveSerial(entrada.next());
+        }
 //        while(true){
 //            System.out.print("Enviar: ");
 //            robo.escreveSerial(entrada.next());

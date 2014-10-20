@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-package sistematfg;
+package javaapplication3;
 
 import gnu.io.CommPortIdentifier;
 import gnu.io.NoSuchPortException;
